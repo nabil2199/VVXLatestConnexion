@@ -54,5 +54,6 @@ foreach ($user in $usersList)
 
     $Results = $Dataset.Tables[0].rows
     $line = $user.upn + "," + $UserSIP + "," + $Results.IpAddress
+    Add-Content $line -Path $PINfilePath
 
 }
