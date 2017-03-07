@@ -4,7 +4,7 @@ Verion 0.1
 OCWS
 #>
 
-param([string]$userCsv = "C:\Sources\users.csv",[string]$IPfilePath = "C:\Sources\ProvisioningPIN.csv")
+param([string]$userCsv = "C:\Sources\users.csv",[string]$IPfilePath = "C:\Sources\IPfile.csv")
 
 #IP file initialise
 Add-Content "upn,SipAddress,IP_address" -Path $IPfilePath
@@ -54,6 +54,6 @@ foreach ($user in $usersList)
 
     $Results = $Dataset.Tables[0].rows
     $line = $user.upn + "," + $UserSIP + "," + $Results.IpAddress
-    Add-Content $line -Path $PINfilePath
+    Add-Content $line -Path $IPfilePath
 
 }
