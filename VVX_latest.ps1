@@ -1,6 +1,6 @@
 <#
 VVX IP address
-Verion 0.1
+Verion 0.2
 OCWS
 #>
 
@@ -11,9 +11,9 @@ Add-Content "upn,SipAddress,IP_address" -Path $IPfilePath
 
 #Log file path 
 #$LogfilePath = "C:\Sources\Connexion_log.txt"
-$date=(Get-Date).ToString('yyyy-MM-dd_HH-mm-ss')
-$LogfilePath=$PSScriptRoot+"\Connexion_log-"+$date+".txt"
- 
+$date = (Get-Date).ToString('yyyy-MM-dd_HH-mm-ss')
+$LogfilePath = $PSScriptRoot + "\Connexion_log-" + $date + ".txt"
+
 # SQL Server for historical connection information
 $SqlServer = "dsi-w4173bddv0.groupe.generali.fr\SQLT110_LYNK2_PA"
 
@@ -26,11 +26,11 @@ Write-Host ""
 
 foreach ($user in $usersList)
 {
-    $UserSIP = $user.SipAddress
-    Write-Host " "
-    Write-Host "Retrieving Recent Lync Client Connections for " -foregroundcolor green -NoNewline; Write-Host $UserSIP -foregroundcolor blue
+  $UserSIP = $user.SipAddress
+  Write-Host " "
+  Write-Host "Retrieving Recent Lync Client Connections for " -ForegroundColor green -NoNewline; Write-Host $UserSIP -ForegroundColor blue
 
-    $SQLQuery = "SELECT TOP 1 [SessionIdTime]
+  $SQLQuery = "SELECT TOP 1 [SessionIdTime]
       ,[RegisterTime]
       ,[UserUri]
       ,[ClientVersion]
@@ -44,29 +44,30 @@ foreach ($user in $usersList)
       ,[DeviceHardwareVersion]
       ,[DeRegisterTime]
       FROM [LcsCDR].[dbo].[RegistrationView] where [UserUri] LIKE '%$UserSIP%' AND [ClientVersion] LIKE '%Polycom%' ORDER BY SessionIdTime DESC"
-      
-    $Connection = new-object system.data.sqlclient.sqlconnection
-    $Connection.connectionString="Data Source=$SqlServer;Initial Catalog=LcsCDR;Integrated Security=SSPI"
-    $Connection.open()
-    $Command = $Connection.CreateCommand()
-    $Command.Commandtext = $SqlQuery
-    $DataAdapter = New-Object System.Data.SqlClient.SqlDataAdapter $Command
-    $Dataset = New-Object System.Data.Dataset
-    $DataAdapter.Fill($Dataset)
-    # $Dataset.Tables[0] | Export-CSV TempList.csv -notype
-    $Connection.close()
-    $Connection = $null
- 
-    $Results = $null
-    $Results = $Dataset.Tables[0].rows
-    $line = $user.upn + "," + $UserSIP + "," + $Results.IpAddress
-    Add-Content $line -Path $IPfilePath
-    if ($Results -eq $null) {
-      $LogLine = "Error: " +$user.upn + " " + $UserSIP + " :Never used a VVX to connect"
-      Add-Content $LogLine -Path $LogfilePath
-    }
-    elseif ($Results -ne $null) {
-      $LogLine = $user.upn + " " + $UserSIP + " :Last connected using VVX at " + $Results.IpAddress
-      Add-Content $LogLine -Path $LogfilePath
-    }
+
+  $Connection = New-Object system.data.sqlclient.sqlconnection
+  $Connection.connectionString = "Data Source=$SqlServer;Initial Catalog=LcsCDR;Integrated Security=SSPI"
+  $Connection.open()
+  $Command = $Connection.CreateCommand()
+  $Command.Commandtext = $SqlQuery
+  $DataAdapter = New-Object System.Data.SqlClient.SqlDataAdapter $Command
+  $Dataset = New-Object System.Data.Dataset
+  $DataAdapter.Fill($Dataset)
+  # $Dataset.Tables[0] | Export-CSV TempList.csv -notype
+  $Connection.close()
+  $Connection = $null
+
+  $Results = $null
+  $Results = $Dataset.Tables[0].rows
+  $line = $user.upn + "," + $UserSIP + "," + $Results.IpAddress
+  $LogLine = $null
+  Add-Content $line -Path $IPfilePath
+  if ($Results -eq $null) {
+    $LogLine = "Error: " + $user.upn + " " + $UserSIP + " :Never used a VVX to connect"
+    Add-Content $LogLine -Path $LogfilePath
+  }
+  elseif ($Results -ne $null) {
+    $LogLine = $user.upn + " " + $UserSIP + " :Last connected using VVX at " + $Results.IpAddress
+    Add-Content $LogLine -Path $LogfilePath
+  }
 }
