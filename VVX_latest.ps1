@@ -9,6 +9,11 @@ param([string]$userCsv = "C:\Sources\users.csv",[string]$IPfilePath = "C:\Source
 #IP file initialise
 Add-Content "upn,SipAddress,IP_address" -Path $IPfilePath
 
+#Log file path 
+#$LogfilePath = "C:\Sources\Connexion_log.txt"
+$date=(Get-Date).ToString('yyyy-MM-dd_HH-mm-ss')
+$LogfilePath=$PSScriptRoot+"\Connexion_log-"+$date+".txt"
+ 
 # SQL Server for historical connection information
 $SqlServer = "dsi-w4173bddv0.groupe.generali.fr\SQLT110_LYNK2_PA"
 
@@ -51,9 +56,17 @@ foreach ($user in $usersList)
     # $Dataset.Tables[0] | Export-CSV TempList.csv -notype
     $Connection.close()
     $Connection = $null
-
+ 
+    $Results = $null
     $Results = $Dataset.Tables[0].rows
     $line = $user.upn + "," + $UserSIP + "," + $Results.IpAddress
     Add-Content $line -Path $IPfilePath
-
+    if ($Results -eq $null) {
+      $LogLine = "Error: " +$user.upn + " " + $UserSIP + " :Never used a VVX to connect"
+      Add-Content $LogLine -Path $LogfilePath
+    }
+    elseif ($Results -ne $null) {
+      $LogLine = $user.upn + " " + $UserSIP + " :Last connected using VVX at " + $Results.IpAddress
+      Add-Content $LogLine -Path $LogfilePath
+    }
 }
