@@ -6,6 +6,11 @@ OCWS
 
 param([string]$userCsv = "C:\Sources\users.csv",[string]$IPfilePath = "C:\Sources\IPfile.csv")
 
+#Log file path 
+#$LogfilePath = "C:\Sources\Connexion_log.txt"
+$date=(Get-Date).ToString('yyyy-MM-dd_HH-mm-ss')
+$LogfilePath=$PSScriptRoot+"\Connexion_log-"+$date+".txt"
+
 #IP file initialise
 Add-Content "upn,SipAddress,IP_address" -Path $IPfilePath
 
@@ -44,6 +49,7 @@ foreach ($user in $usersList)
       ,[DeviceHardwareVersion]
       ,[DeRegisterTime]
       FROM [LcsCDR].[dbo].[RegistrationView] where [UserUri] LIKE '%$UserSIP%' AND [ClientVersion] LIKE '%Polycom%' ORDER BY SessionIdTime DESC"
+<<<<<<< HEAD
 
   $Connection = New-Object system.data.sqlclient.sqlconnection
   $Connection.connectionString = "Data Source=$SqlServer;Initial Catalog=LcsCDR;Integrated Security=SSPI"
@@ -71,3 +77,34 @@ foreach ($user in $usersList)
     Add-Content $LogLine -Path $LogfilePath
   }
 }
+=======
+      
+    $Connection = new-object system.data.sqlclient.sqlconnection
+    $Connection.connectionString="Data Source=$SqlServer;Initial Catalog=LcsCDR;Integrated Security=SSPI"
+    $Connection.open()
+    $Command = $Connection.CreateCommand()
+    $Command.Commandtext = $SqlQuery
+    $DataAdapter = New-Object System.Data.SqlClient.SqlDataAdapter $Command
+    $Dataset = New-Object System.Data.Dataset
+    $DataAdapter.Fill($Dataset)
+    # $Dataset.Tables[0] | Export-CSV TempList.csv -notype
+    $Connection.close()
+    $Connection = $null
+
+    $Results = $null
+    $Results = $Dataset.Tables[0].rows
+    $line = $user.upn + "," + $UserSIP + "," + $Results.IpAddress
+    Add-Content $line -Path $IPfilePath
+
+    if ($Results -eq $null) {
+      $LogLine = "Error: " +$user.upn + " " + $UserSIP + " :Never used a VVX to connect"
+      Add-Content $LogLine -Path $LogfilePath
+    }
+    elseif ($Results -ne $null) {
+      $LogLine = $user.upn + " " + $UserSIP + " :Last connected using VVX at " + $Results.IpAddress
+      Add-Content $LogLine -Path $LogfilePath
+    }
+
+
+}
+>>>>>>> origin/master
